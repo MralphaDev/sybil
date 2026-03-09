@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-
+from pathlib import Path
 import pandas as pd
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,7 +16,10 @@ app.add_middleware(
 )
 
 # ---------- 配置 ----------
-CSV_FOLDER = "E:\\桌面\\sybil\\backend\\wallets"
+#CSV_FOLDER = "E:\\桌面\\sybil\\backend\\wallets"
+BASE_DIR = Path(__file__).resolve().parent
+CSV_FOLDER = BASE_DIR / "wallets"
+
 ACTION_MAP = {
     "Claim": "C",
     "Batch Claim Token": "B",
@@ -28,12 +31,14 @@ ACTION_MAP = {
 # ---------- 读取 CSV 数据 ----------
 example_data = []
 
-for filename in os.listdir(CSV_FOLDER):
+#for filename in os.listdir(CSV_FOLDER):
+for filename in os.listdir(str(CSV_FOLDER)):
     if not filename.endswith(".csv"):
         continue
 
     wallet_id = filename.replace("export-", "").replace(".csv", "").lower()
-    df = pd.read_csv(os.path.join(CSV_FOLDER, filename))
+    #df = pd.read_csv(os.path.join(CSV_FOLDER, filename))
+    df = pd.read_csv(CSV_FOLDER / filename)
 
     for _, row in df.iterrows():
         timestamp_str = str(row.get("DateTime (UTC)", row.get("timestamp")))
