@@ -4,8 +4,13 @@ from pathlib import Path
 import pandas as pd
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fund_graph_construct import build_nodes, build_edges
+from clustering import find_connected_components
+from behv_analysis import analyze_similarity
+from dbscan import run_dbscan_on_clusters
+from entity_identification.syb_entity_id import identify_sybil_entities
 
-# ---------- FastAPI 初始化 ----------
+# ---------- FastAPI ----------
 app = FastAPI()
 
 app.add_middleware(
@@ -16,7 +21,6 @@ app.add_middleware(
 )
 
 # ---------- 配置 ----------
-#CSV_FOLDER = "E:\\桌面\\sybil\\backend\\wallets"
 BASE_DIR = Path(__file__).resolve().parent
 CSV_FOLDER = BASE_DIR / "wallets"
 
@@ -25,30 +29,49 @@ ACTION_MAP = {
     "Batch Claim Token": "B",
     "Transfer": "T",
     "Swap": "S",
-    "Approve": "A"
+    "Approve": "A",
+    "Batch Transfer": "BT"
 }
 
-# ---------- 读取 CSV 数据 ----------
-example_data = []
+# ---------- 读取 CSV ----------
+csv_data = []
 
-#for filename in os.listdir(CSV_FOLDER):
 for filename in os.listdir(str(CSV_FOLDER)):
     if not filename.endswith(".csv"):
         continue
 
     wallet_id = filename.replace("export-", "").replace(".csv", "").lower()
-    #df = pd.read_csv(os.path.join(CSV_FOLDER, filename))
+
     df = pd.read_csv(CSV_FOLDER / filename)
+    
+     # --------- 清洗列名 ----------
+    df.columns = df.columns.str.strip()          # 去掉前后空格
+    df.columns = df.columns.str.replace("\ufeff", "")  # 去掉 BOM 隐藏字符（Excel CSV 常见）
+    
+        # 如果 CSV 为空，也添加一个占位记录，保证 wallet_id 被记录
+    if df.empty:
+        csv_data.append({
+            "from": None,
+            "to": None,
+            "amount": 0.0,
+            "timestamp": None,
+            "method": None,
+            "wallet_id": wallet_id
+        })
+        continue
+
 
     for _, row in df.iterrows():
+
         timestamp_str = str(row.get("DateTime (UTC)", row.get("timestamp")))
+        
+
         try:
             ts = datetime.fromisoformat(timestamp_str)
         except ValueError:
             ts = datetime.strptime(timestamp_str, "%Y/%m/%d %H:%M")
 
-
-        example_data.append({
+        csv_data.append({
             "from": row["From"].lower(),
             "to": row["To"].lower(),
             "amount": float(str(row["Amount"]).replace(" BNB", "").strip()),
@@ -57,57 +80,73 @@ for filename in os.listdir(str(CSV_FOLDER)):
             "wallet_id": wallet_id
         })
 
-# ---------- 收集所有 unique wallet ----------
-all_wallets = set(
-    tx["wallet_id"] for tx in example_data
-) | set(tx["from"] for tx in example_data) | set(tx["to"] for tx in example_data)
 
-# ---------- 初始化 nodes ----------
-nodes = {w: {"id": w, "behavior_vector": None, "variant": None} for w in all_wallets}
+# ---------- suspicious wallets (CSV addresses only) ----------
+suspicious_wallets = set(tx["wallet_id"] for tx in csv_data)
 
-# ---------- 填充 CSV wallet 的行为向量和 variant ----------
-for wallet_id in set(tx["wallet_id"] for tx in example_data):
-    wallet_txs = [tx for tx in example_data if tx["wallet_id"] == wallet_id]
-    wallet_txs.sort(key=lambda x: x["timestamp"])
+# ---------- 行为分析 ----------
+nodes = build_nodes(csv_data, suspicious_wallets, ACTION_MAP)
 
-    tx_cnt = len(wallet_txs)
-    avg_amt = sum(tx["amount"] for tx in wallet_txs) / tx_cnt if tx_cnt else 0
-    peers = len(set(tx["to"] for tx in wallet_txs))
+# ---------- edges ----------
+edges = build_edges(csv_data, suspicious_wallets)
 
-    first_tx = wallet_txs[0] if wallet_txs else None
-    new = 1 if first_tx else 0
-    t_min = int(datetime.fromisoformat(first_tx["timestamp"]).timestamp() / 60) if first_tx else 0
-    a = first_tx["amount"] if first_tx else 0
+# ---------- clustering ----------
+clusters = find_connected_components(nodes, edges)
+num_clusters = len(clusters)
 
-    variant_str = "->".join([ACTION_MAP.get(tx["method"], "U") for tx in wallet_txs])
+print(f"Total ICCs found: {num_clusters}")
+'''for i, cluster in enumerate(clusters):
+    print(f"Cluster {i+1}: {cluster}")'''
 
-    nodes[wallet_id]["behavior_vector"] = [tx_cnt, avg_amt, peers, new, t_min, a]
-    nodes[wallet_id]["variant"] = variant_str
+# ---------- Similarities ----------
+similarities = analyze_similarity(nodes)
 
-# ---------- 生成 edges ----------
-edges = [
-    {
-        "source": tx["from"],
-        "target": tx["wallet_id"],
-        "amount": tx["amount"],
-        "timestamp": tx["timestamp"],
-        "type": "funding"  # 直接 funding
-    }
-    for tx in example_data
-    
-]
-'''for tx in example_data:
-    edges.append({
-        "source": tx["from"],
-        "target": tx["to"],
-        "amount": tx["amount"],
-        "timestamp": tx["timestamp"],
-        "method": tx["method"],
-        "type": "transfer"
-    })'''
+# ---------- DBSCAN on each cluster ----------
+# min_samples=3, eps_percentile=40 可以调节
+dbscan_results = run_dbscan_on_clusters(nodes, clusters, similarities['weighted'], min_samples=2)
+
+# 打印到 console
+'''print("\n--- DBSCAN results within each cluster ---")
+for c_idx, cluster_res in dbscan_results.items():
+    subclusters = {}
+    for wallet, label in cluster_res.items():
+        subclusters.setdefault(label, []).append(wallet)
+    print(f"Cluster {c_idx}: {len(subclusters)} subclusters -> {subclusters}")'''
 
 
-# ---------- FastAPI endpoint ----------
+
+
+# ---------- API ----------
 @app.get("/graph")
+
 def get_graph():
-    return {"nodes": list(nodes.values()), "edges": edges}
+ # 对 dbscan_results 做处理，保证 label 连续，从 0 开始，同时单独列出噪声
+    api_dbscan = {}
+
+    for c_idx, cluster_res in dbscan_results.items():
+        # 重编号子群 label 从 0 开始
+        non_noise_labels = sorted(l for l in set(cluster_res.values()) if l != -1)
+        label_map = {old:new for new, old in enumerate(non_noise_labels)}
+
+        cluster_output = {"subgroups": {}, "noise": []}
+
+        for wallet, label in cluster_res.items():
+            if label == -1:
+                cluster_output["noise"].append(wallet)
+            else:
+                new_label = label_map[label]
+                cluster_output["subgroups"].setdefault(new_label, []).append(wallet)
+
+        api_dbscan[c_idx] = cluster_output
+        
+         # Identify sybil entities based on backtracking
+        sybil_entities = identify_sybil_entities(api_dbscan, edges)
+    return {
+        "nodes": nodes,
+        "edges": edges,
+        "clusters": clusters,
+        "num_clusters": num_clusters,
+        "similarities": similarities,
+        "dbscan": api_dbscan,  # 新增 dbscan 结果
+        "sybil_entities": sybil_entities   # 新增 sybil entity 结果
+    }

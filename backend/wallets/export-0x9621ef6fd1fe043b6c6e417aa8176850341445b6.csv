@@ -1,0 +1,2 @@
+﻿Transaction Hash,Status,Method,Blockno,DateTime (UTC),From,From_Nametag,To,To_Nametag,Amount,Value (USD),Txn Fee
+0x605cb479e987333e167566b744157a05e106eb63f8cb1d4e745b2f718a26ba9c,Success,Transfer,49135528,2025/5/5 11:59,0xf5988713400da6fc8a58ec9515e2b0df9b40b115,OKX 175,0x9621ef6fd1fe043b6c6e417aa8176850341445b6,,0.01661816 BNB,$10.59 ,0.0000315

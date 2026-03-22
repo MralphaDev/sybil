@@ -1,0 +1,2 @@
+Transaction Hash,Status,Method,Blockno,DateTime (UTC),From,From_Nametag,To,To_Nametag,Amount,Value (USD),Txn Fee
+0x0fb0a7492f78d4d1920f772efc1d450af205ba7f0f2172b9582995395592d835,Success,Ai Sign,81598464,2026/03/16 16:44,0xfc4a17de5775d8e7cb7b49df6a2986c671924700,999o999.bnb,0xa3d65d0b40c262a29b6efb6952d67ba8f808a4cf,charlie.bnb,0.000876 BNB,$3.42,3.2e-06
