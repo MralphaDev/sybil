@@ -2,22 +2,29 @@
 
 import { useState, useEffect, useRef } from "react";
 import * as d3 from "d3";
+import InfoPanelRight from "./InfoPanelRight";
+import useGraph from "./useGraph";
 
-export default function GraphCanvas({ nodes, edges, onSelect , highlightNodes, clusters }) {
-const [mounted, setMounted] = useState(false);
- const svgRef = useRef(null);
-const baseColors = ["#ef7112", "#da00ab", "#00d58c"];
-const clusterColorMap = new Map();
-// sort clusters by size DESC
-const sortedClusters = [...clusters].sort((a, b) => b.length - a.length);
-sortedClusters.forEach((cluster, i) => {
-  // cycle through baseColors if i >= 3
-  const color = baseColors[i % baseColors.length];
+export default function GraphCanvas({ nodes, edges, onSelect ,selected, highlightNodes, setHighlightNodes,clusters }) {
+  const { similarities, dbscan, sybil_entities,aggregated_relations } = useGraph();
+  const [mounted, setMounted] = useState(false);
+  const svgRef = useRef(null);
+  const baseColors = ["#ef7112", "#da00ab", "#00d58c"];
+  const clusterColorMap = new Map();
 
-  cluster.forEach(address => {
-    clusterColorMap.set(address.toLowerCase(), color);
+    // 当前选中的 node/edge
+  //const [selected, setSelected] = useState(null);
+
+  // sort clusters by size DESC
+  const sortedClusters = [...clusters].sort((a, b) => b.length - a.length);
+  sortedClusters.forEach((cluster, i) => {
+    // cycle through baseColors if i >= 3
+    const color = baseColors[i % baseColors.length];
+
+    cluster.forEach(address => {
+      clusterColorMap.set(address.toLowerCase(), color);
+    });
   });
-});
 
 
   useEffect(() => {
@@ -31,7 +38,8 @@ sortedClusters.forEach((cluster, i) => {
     //const width = window.innerWidth * 0.75;
     //const height = window.innerHeight * 0.9;
 
-    const width = window.innerWidth * 0.8;
+    //const width = window.innerWidth * 0.8;
+    const width = window.innerWidth;
 const height = window.innerHeight;
 
     // 每个 cluster 的中心点（相对画布中心偏移）
@@ -206,7 +214,8 @@ grad.append("stop")
   const color = clusterColorMap.get(d.id.toLowerCase()) || "#fff";
 
   // 3️⃣ Smooth auto-zoom to the node using existing zoomBehavior
-  const svgWidth = window.innerWidth * 0.75;
+  const svgWidth = window.innerWidth;
+  //const svgWidth = window.innerWidth * 0.75; 
   const svgHeight = window.innerHeight * 0.9;
   const scale = 2; // zoom amount
   const translateX = svgWidth / 2 - d.x * scale;
@@ -703,10 +712,34 @@ return (
     {/* 原始 SVG */}
     <svg
       ref={svgRef}
-      width="100%"
+      width="100vw"
       height="100vh"
+        viewBox={`0 0 ${window.innerWidth} ${window.innerHeight}`}
+  preserveAspectRatio="xMidYMid meet"
       style={{ display: "block" }}
     />
+
+    {/* InfoPanelRight 漂浮 */}
+      <div
+        style={{
+          position: "absolute",
+          top: 20,
+          right: 20,
+          width: 350,
+          height: "90vh",
+          zIndex: 999,
+        }}
+      >
+        <InfoPanelRight
+          selected={selected}
+          highlightNodes={highlightNodes}
+          setHighlightNodes={setHighlightNodes}
+          clusters={clusters}
+          dbscan={dbscan}
+          similarities={similarities}
+        />
+      </div>
+    
   </div>
 );
 

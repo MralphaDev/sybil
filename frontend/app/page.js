@@ -5,6 +5,7 @@ import GraphCanvas from "./components/GraphCanvas";
 import InfoPanel from "./components/InfoPanel";
 import useGraph from "./components/useGraph";
 import ClustersView from "./components/clustersView";
+import { index } from "d3";
 
 export default function Home() {
   const { nodes, edges, clusters, similarities, dbscan, sybil_entities,aggregated_relations } = useGraph();
@@ -19,32 +20,32 @@ export default function Home() {
         display: "flex",
         background: "#121212",
         color: "#fff",
-        height: "100vh",
-        width: "100vw",
+
         
       }}
     >
       
       {/* 左侧图 */}
-      <GraphCanvas nodes={nodes} edges={edges} onSelect={setSelected} clusters={clusters} highlightNodes={highlightNodes}/>
+      <GraphCanvas nodes={nodes} edges={edges} selected={selected} onSelect={setSelected} clusters={clusters} highlightNodes={highlightNodes} setHighlightNodes={setHighlightNodes} />
 
      {/* Heatmap toggle button */}
-      <button
+      {<button
         onClick={() => setShowHeatmap(!showHeatmap)}
         style={{
           position: "absolute",
-          top: 20,
-          right: 20,
+          top: 25,
+          right: 25,
           padding: "8px 14px",
           background: "#444",
           color: "white",
           border: "none",
-          borderRadius: 6,
-          cursor: "pointer"
+          borderRadius: 10,
+          cursor: "pointer",
+          zIndex: 1000
         }}
       >
         {showHeatmap ? "Close Heatmap" : "Show Heatmap"}
-      </button>
+      </button>}
 
       {/* Heatmap modal */}
       {showHeatmap && (
@@ -56,8 +57,8 @@ export default function Home() {
       )}
 
 
-      {/* 右侧信息面板 */}
-      <InfoPanel
+      {/* 左侧信息面板 */}
+      {<InfoPanel
         selected={selected}
         clusters={clusters}
         similarities={similarities}
@@ -66,7 +67,7 @@ export default function Home() {
         aggregated_relations={aggregated_relations}
         setHighlightNodes={setHighlightNodes}
 
-      />
+      />}
     </div>
   );
 }

@@ -63,14 +63,13 @@ const safeAggregated = Array.isArray(aggregated_relations)
       </div>
        
       {/* Sybil Info Panel */}
- {/* Sybil Info Panel */}
       <AnimatePresence>
         {open && (
           <motion.div
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
-            className="fixed top-20 left-0 h-auto max-h-[70vh] w-80 bg-gray-900/95 shadow-2xl p-4 overflow-y-auto z-40 rounded-r-2xl"
+            className="fixed top-60 left-0 h-auto max-h-[70vh] w-80 bg-gray-900/95 shadow-2xl p-4 overflow-y-auto z-40 rounded-r-2xl"
           >
             {/* 切换按钮 */}
             <div className="absolute top-3 right-3">
@@ -84,9 +83,9 @@ const safeAggregated = Array.isArray(aggregated_relations)
               </button>
             </div>
 
-<h2 className="text-xl font-semibold mb-4 text-orange-400 text-left">
-  Sybil Entity Analysis
-</h2>
+          <h2 className="text-xl font-semibold mb-4 text-orange-400 text-left">
+            Sybil Entity Analysis
+          </h2>
 
             {/* 内容切换 */}
             {showAggregated ? (
@@ -279,10 +278,16 @@ const safeAggregated = Array.isArray(aggregated_relations)
         )}
       </AnimatePresence>
     </>
-      {/* 右侧信息面板 */}
-    <div style={{
-      width: 320,
-      marginLeft: 20,
+      
+
+    </div>
+  );
+}
+
+{/* 右侧信息面板 */}
+    {/*<div style={{
+      width: 350,
+      height: "100vh",
       background: "#1c1c1c",
       padding: 14,
       borderRadius: 6,
@@ -295,7 +300,7 @@ const safeAggregated = Array.isArray(aggregated_relations)
         <p style={{ opacity: 0.6 }}>Click node or edge</p>
       )}
 
-      {/* Node info */}
+   
       {selected?.type === "node" && (
         <>
           <p><b>Wallet</b></p>
@@ -314,7 +319,7 @@ const safeAggregated = Array.isArray(aggregated_relations)
         </>
       )}
 
-      {/* Edge info */}
+      
       {selected?.type === "edge" && (
         <>
           <p><b>Funding Edge</b></p>
@@ -326,7 +331,7 @@ const safeAggregated = Array.isArray(aggregated_relations)
         </>
       )}
 
-      {/* Clusters */}
+      
   {clusters && !activeCluster && (
   <>
     <p style={{ fontWeight: 600, marginBottom: 12, color: "#fff", fontSize: 14 }}>
@@ -362,7 +367,7 @@ const safeAggregated = Array.isArray(aggregated_relations)
       </div>
     ))}
 
-    {/* Pagination */}
+    
     <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between" }}>
       <button
         onClick={() => setPage(Math.max(page - 1, 0))}
@@ -398,7 +403,7 @@ const safeAggregated = Array.isArray(aggregated_relations)
   </>
 )}
 
-{/* Active cluster detail */}
+
 {activeCluster&& !activeDbscan && (
   <>
     <p style={{ fontWeight: 600, marginBottom: 8, color: "#fff", fontSize: 14 }}>
@@ -454,7 +459,7 @@ const safeAggregated = Array.isArray(aggregated_relations)
   </>
 )}
 
-{/* DBSCAN view */}
+
 {activeDbscan &&  (
   <>
     <p style={{ fontWeight: 600, marginBottom: 8, color: "#fff", fontSize: 14 }}>
@@ -506,8 +511,7 @@ const safeAggregated = Array.isArray(aggregated_relations)
       </div>
     )}
 
-    {/* Subgroup / Noise Window */}
-{/* Subgroup / Noise Window */}
+
 {showSubgroupWindow && currentSubgroup && (
   <div
     style={{
@@ -586,11 +590,11 @@ const safeAggregated = Array.isArray(aggregated_relations)
 
 {selected?.type === "node" && similarities && (
   <div style={{ marginTop: 12 }}>
-    {/* Container */}
+
     <p style={{ fontWeight: 600, marginBottom: 8 }}>Top Similar Wallets</p>
 
     <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-      {/* Behavior Similarity Card */}
+
       <div style={{
         flex: 1,
         minWidth: 140,
@@ -627,7 +631,7 @@ const safeAggregated = Array.isArray(aggregated_relations)
         </ul>
       </div>
 
-      {/* Variant Similarity Card */}
+
       <div style={{
         flex: 1,
         minWidth: 140,
@@ -664,7 +668,7 @@ const safeAggregated = Array.isArray(aggregated_relations)
         </ul>
       </div>
 
-      {/* Weighted Similarity Card */}
+
       <div style={{
         flex: 1,
         minWidth: 140,
@@ -706,8 +710,4 @@ const safeAggregated = Array.isArray(aggregated_relations)
   </div>
 )}
 
-    </div>
-
-    </div>
-  );
-}
+    </div>*/}
