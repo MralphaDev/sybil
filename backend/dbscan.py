@@ -45,6 +45,6 @@ def run_dbscan_on_clusters(nodes, clusters, similarities, min_samples=2, similar
         for wallet, label in cluster_dbscan_results[c_idx].items():
             subclusters.setdefault(label, []).append(wallet)
         num_sub = len([k for k in subclusters.keys() if k != -1])
-        print(f"Cluster {c_idx}: eps={eps:.2f}, subclusters={num_sub}, labels={subclusters}")
+       # print(f"Cluster {c_idx}: eps={eps:.2f}, subclusters={num_sub}, labels={subclusters}")
 
     return cluster_dbscan_results

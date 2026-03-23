@@ -7,7 +7,7 @@ import useGraph from "./components/useGraph";
 import ClustersView from "./components/clustersView";
 
 export default function Home() {
-  const { nodes, edges, clusters, similarities, dbscan, sybil_entities } = useGraph();
+  const { nodes, edges, clusters, similarities, dbscan, sybil_entities,aggregated_relations } = useGraph();
   const [selected, setSelected] = useState(null);
  const [showHeatmap, setShowHeatmap] = useState(false);
  const [highlightNodes, setHighlightNodes] = useState(null); // Set of wallet ids 闪烁节点
@@ -63,7 +63,9 @@ export default function Home() {
         similarities={similarities}
         dbscan={dbscan}
         sybil_entities={sybil_entities}
+        aggregated_relations={aggregated_relations}
         setHighlightNodes={setHighlightNodes}
+
       />
     </div>
   );

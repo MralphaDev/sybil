@@ -94,7 +94,7 @@ edges = build_edges(csv_data, suspicious_wallets)
 clusters = find_connected_components(nodes, edges)
 num_clusters = len(clusters)
 
-print(f"Total ICCs found: {num_clusters}")
+#print(f"Total ICCs found: {num_clusters}")
 '''for i, cluster in enumerate(clusters):
     print(f"Cluster {i+1}: {cluster}")'''
 
@@ -140,7 +140,16 @@ def get_graph():
         api_dbscan[c_idx] = cluster_output
         
          # Identify sybil entities based on backtracking
-        sybil_entities = identify_sybil_entities(api_dbscan, edges)
+        #sybil_entities = identify_sybil_entities(api_dbscan,nodes, edges)
+        sybil_entities, global_result, aggregated_relations = identify_sybil_entities(
+    api_dbscan,
+    nodes,
+    edges,
+    variant_weight=0.5,
+    eps=0.1,
+    min_samples=2,
+    global_dbscan=True  # 开启全局 DBSCAN
+)
     return {
         "nodes": nodes,
         "edges": edges,
@@ -148,5 +157,7 @@ def get_graph():
         "num_clusters": num_clusters,
         "similarities": similarities,
         "dbscan": api_dbscan,  # 新增 dbscan 结果
-        "sybil_entities": sybil_entities   # 新增 sybil entity 结果
+        "sybil_entities": sybil_entities,   # 新增 sybil entity 结果
+        "global_result": global_result,  # 新增全局 DBSCAN 结果
+        "aggregated_relations": aggregated_relations  # 新增聚合关系结果
     }

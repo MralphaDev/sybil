@@ -1,17 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as d3 from "d3";
 
 export default function GraphCanvas({ nodes, edges, onSelect , highlightNodes, clusters }) {
-  const baseColors = ["#ef7112", "#da00ab", "#00d58c"];
-
-
+const [mounted, setMounted] = useState(false);
+ const svgRef = useRef(null);
+const baseColors = ["#ef7112", "#da00ab", "#00d58c"];
 const clusterColorMap = new Map();
-
 // sort clusters by size DESC
 const sortedClusters = [...clusters].sort((a, b) => b.length - a.length);
-
 sortedClusters.forEach((cluster, i) => {
   // cycle through baseColors if i >= 3
   const color = baseColors[i % baseColors.length];
@@ -22,7 +20,9 @@ sortedClusters.forEach((cluster, i) => {
 });
 
 
-  const svgRef = useRef(null);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
 
@@ -168,7 +168,7 @@ grad.append("stop")
         d3.forceCenter(width / 2, height / 2)
       )
       .force("collision",
-        d3.forceCollide().radius(13) // 增加碰撞半径，减少节点重叠
+        d3.forceCollide().radius(15) // 增加碰撞半径，减少节点重叠
       );
 
       sim.on("end", () => {
@@ -194,6 +194,7 @@ grad.append("stop")
       .selectAll("g")
       .data(nodes)
       .join("g")
+      .attr("class", "node") // 👈 add this class
       .style("cursor", "pointer")
      
       //apply ripple effect on click and select node
@@ -265,6 +266,8 @@ grad.append("stop")
           .on("end", (event, d) => {
 
             if (!event.active) sim.alphaTarget(0);
+            d.fx = null; // release the node
+            d.fy = null;
 
           })
       );
@@ -275,6 +278,11 @@ node.append("circle")
   .attr("stroke", d => clusterColorMap.get(d.id.toLowerCase()) || "#999")
   .attr("stroke-width", 6)
 .attr("fill", "#000") // 👈 pure black base
+.attr("stroke-dasharray", d => {
+    // Check if this node appears in any edge
+    const isIsolated = !d3Edges.some(e => e.source.id === d.id || e.target.id === d.id);
+    return isIsolated ? "6 5" : null;   // broken stroke only for isolated nodes
+  })
 
 node.append("circle")
   .attr("r", 21)
@@ -437,7 +445,7 @@ sim.on("tick", () => {
 
      svg.selectAll("circle")
     node.select("circle")
-  .attr("stroke", d => highlightNodes?.has(d.id) ? "#FF0000" : clusterColorMap.get(d.id.toLowerCase()) || "#999");
+  //.attr("stroke", d => highlightNodes?.has(d.id) ? "#FF0000" : clusterColorMap.get(d.id.toLowerCase()) || "#999");
     //window.alert("the highlight nodes: " + (highlightNodes ? Array.from(highlightNodes) : "None"));
 
     // ---------- Zoom ----------
@@ -447,17 +455,29 @@ sim.on("tick", () => {
         .on("zoom", (event) => {
 
           g.attr("transform", event.transform);
-h
+
         })
     );
 
-  }, [nodes, edges, highlightNodes]);
+  }, [nodes, edges]);
 
-  
+  useEffect(() => {
+  if (!svgRef.current) return;
+
+  const svg = d3.select(svgRef.current);
+
+  svg.selectAll("g.node circle")
+    .attr("stroke", d => highlightNodes?.has(d.id) 
+      ? "#FF0000" 
+      : clusterColorMap.get(d.id.toLowerCase()) || "#999"
+    );
+
+}, [highlightNodes]);
+
 return (
   <div style={{ width: "100vw", height: "100v", position: "relative" }}>
 
-    {nodes.length === 0 && (
+    {!mounted || nodes.length === 0 && (
       <div
         style={{
           position: "absolute",

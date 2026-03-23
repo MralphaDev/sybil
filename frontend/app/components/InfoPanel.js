@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 //import { Tooltip } from "@material-tailwind/react"; // 可选 tooltip 库
 
-export default function InfoPanel({ selected, clusters ,similarities,dbscan,setHighlightNodes,sybil_entities}) {
+export default function InfoPanel({ selected, clusters ,similarities,dbscan,setHighlightNodes,sybil_entities, aggregated_relations}) {
 
   const [page, setPage] = useState(0);
   const [activeCluster, setActiveCluster] = useState(null);
@@ -11,19 +11,16 @@ export default function InfoPanel({ selected, clusters ,similarities,dbscan,setH
   const [showSubgroupWindow, setShowSubgroupWindow] = useState(false); // 是否显示 subgroup 窗口
   const [currentSubgroup, setCurrentSubgroup] = useState(null); // 当前显示的 subgroup / noise 地址列表
 
-  const clustersPerPage = 2;
+  const [open, setOpen] = useState(false);
+  const [showAggregated, setShowAggregated] = useState(false);
+
+    const clustersPerPage = 2;
   const totalPages = Math.ceil(clusters?.length / clustersPerPage || 1);
 
   const displayedClusters = clusters?.slice(
     page * clustersPerPage,
     page * clustersPerPage + clustersPerPage
   ) || [];
-
-  const [open, setOpen] = useState(false);
-  //const safeSybil = Array.isArray(sybil_entities) ? sybil_entities : [];
-  const safeSybil = typeof sybil_entities === "object" && sybil_entities !== null ? sybil_entities : {};
-  console.log("Sybil entities:", sybil_entities);
-  
 
   const labels = [
   "Total TX Count",
@@ -41,6 +38,13 @@ function shortenHex(hex, start = 6, end = 4) {
   return `${hex.slice(0, start)}…${hex.slice(-end)}`;
 }
 
+  //const safeSybil = Array.isArray(sybil_entities) ? sybil_entities : [];
+  const safeSybil = typeof sybil_entities === "object" && sybil_entities !== null ? sybil_entities : {};
+  //console.log("Sybil entities:", sybil_entities);
+
+const safeAggregated = Array.isArray(aggregated_relations)
+  ? aggregated_relations
+  : [];
 
   return (
     <div>
@@ -58,129 +62,224 @@ function shortenHex(hex, start = 6, end = 4) {
         </button>
       </div>
        
-      {/* Info Panel */}
+      {/* Sybil Info Panel */}
+ {/* Sybil Info Panel */}
       <AnimatePresence>
         {open && (
           <motion.div
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
-            drag="x"
-            dragConstraints={{ left: -200, right: 0 }}
             className="fixed top-20 left-0 h-auto max-h-[70vh] w-80 bg-gray-900/95 shadow-2xl p-4 overflow-y-auto z-40 rounded-r-2xl"
           >
-            <h2 className="text-xl font-extrabold mb-4 text-orange-400 text-center">
-              Sybil Entity Analysis
-            </h2>
-
-            {Object.keys(safeSybil).length === 0 ? (
-              <p className="text-gray-400 italic text-sm text-center">
-                No suspicious entities detected.
-              </p>
-            ) : (
-              Object.entries(safeSybil).map(([clusterId, clusterData]) => {
-                const funders = clusterData.funder_to_subgroups
-                  ? Object.keys(clusterData.funder_to_subgroups)
-                  : [];
-                const subToFunder = clusterData.subgroup_to_funder || {};
-                const noise = Array.isArray(clusterData.noise) ? clusterData.noise : [];
-
-                return (
-                  <div key={clusterId} className="mb-4">
-                    <p className="text-purple-300 font-bold text-lg mb-2">
-                      Cluster {clusterId}
-                    </p>
-
-                    {/* Sybil entities */}
-                    {funders.length > 0 &&
-                      funders.map((funder, idx) => {
-                        const subgroups = clusterData.funder_to_subgroups[funder] || [];
-                        //const linkedSubgroups = subgroups.map(s => subToFunder[s]).filter(Boolean);
-
-                        return (
-                          <motion.div
-                            key={idx}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.3, delay: idx * 0.1 }}
-                            className="mb-3 p-3 bg-gray-800 rounded-lg shadow-md border-l-4 border-purple-500"
-                          >
-                            <p className="text-purple-300 font-semibold">
-                              Sybil entity {idx}:
-                            </p>
-
-                            {/* 钱包地址处理 */}
-                            <p
-                              className="text-white font-medium mt-1 truncate w-full"
-                              title={funder} // hover 显示完整地址
-                            >
-                              {funder}
-                            </p>
-
-                            <p className="text-gray-300 text-sm mt-1">
-  Strong Sybil evidence. <br/> Reason: Funding link found, {subgroups.length} subgroups source back to{' '}
-  <span className="text-orange-400 font-semibold">{shortenHex(funder)}</span>. 
-                            </p>
-                           {subgroups.length > 0 && (
-          <div className="mt-1 flex flex-wrap gap-1">
-            <span className="text-gray-400 text-xs italic w-full">
-              Subgroups linked to this funder:
-            </span>
-            {subgroups.map((sub, i) => (
-              <span
-                key={i}
-                className="bg-purple-700/70 text-white text-xs px-2 py-1 rounded-md shadow-sm"
+            {/* 切换按钮 */}
+            <div className="absolute top-3 right-3">
+              <button
+                onClick={() => setShowAggregated(!showAggregated)}
+                className="text-xs px-3 py-1 rounded-full 
+                        bg-gradient-to-r from-purple-500 to-orange-500 
+                        text-white shadow-md hover:scale-105 transition-all"
               >
-                {sub}
-              </span>
-            ))}
-          </div>
-        )}
-                          </motion.div>
-                        );
-                      })}
+                {showAggregated ? "Raw" : "Aggregated"}
+              </button>
+            </div>
 
-                    {/* Noise accounts */}
-                    {noise.length > 0 && (
+<h2 className="text-xl font-semibold mb-4 text-orange-400 text-left">
+  Sybil Entity Analysis
+</h2>
+
+            {/* 内容切换 */}
+            {showAggregated ? (
+              <>
+                {safeAggregated.length === 0 ? (
+                  <p className="text-gray-400 italic text-sm text-center">
+                    No aggregated sybil entities.
+                  </p>
+                ) : (
+                  safeAggregated.map((entity, idx) => {
+                    const related = Array.isArray(entity.related_outer)
+                      ? entity.related_outer
+                      : [];
+                    const subs = Array.isArray(entity.subgroups)
+                      ? entity.subgroups
+                      : [];
+
+                    return (
                       <motion.div
+                        key={idx}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: funders.length * 0.1 }}
-                        className="p-3 bg-gray-800 rounded-lg shadow-inner border-l-4 border-orange-500"
+                        transition={{ duration: 0.25, delay: idx * 0.03 }}
+                        className="mb-3 p-3 bg-gray-800 rounded-lg shadow-md border-l-4 border-orange-400"
                       >
                         <p className="text-orange-300 font-semibold">
-                          Isolated / Noise Accounts:
+                          Aggregated Sybil {idx + 1}
                         </p>
-                        <ul className="mt-1 flex flex-wrap gap-1">
-                          {noise.slice(0, 5).map((n, i) => (
-                            <li
-                              key={i}
-                              className="bg-orange-600/70 text-white px-2 py-1 rounded-full text-xs truncate max-w-[120px]"
-                              title={n} // hover 显示完整地址
-                            >
-                              {n}
-                            </li>
-                          ))}
-                          {noise.length > 5 && (
-                            <span className="text-gray-400 text-xs ml-2">
-                              +{noise.length - 5} more
-                            </span>
-                          )}
-                        </ul>
-                        <p className="mt-1 text-gray-400 text-xs italic">
-                          Total isolated accounts: {noise.length}
+
+                        <p
+                          className="text-white text-xs mt-1 truncate"
+                          title={entity.funder}
+                        >
+                          {entity.funder}
+                        </p>
+
+                        <div className="mt-2">
+                          <p className="text-gray-400 text-xs italic">Involved subgroups:</p>
+
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {subs.map((sg, i) => (
+                              <span
+                                key={i}
+                                className="bg-purple-700/70 text-white text-xs px-2 py-1 rounded-md"
+                              >
+                                {`C${entity.cluster + 1}-S${sg}`}
+                              </span>
+                            ))}
+
+                            {related.map((r, i) => (
+                              <span
+                                key={`r-${i}`}
+                                className="bg-orange-600/70 text-white text-xs px-2 py-1 rounded-md"
+                              >
+                                {`C${r.to_cluster + 1}-S${r.to_subgroup}`}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <p className="text-gray-400 text-xs mt-1 italic">
+                          {related.length === 0
+                            ? "No cross-cluster similarity detected."
+                            : `Detected ${related.length} cross-cluster behavioral links (DBSCAN).`}
                         </p>
                       </motion.div>
-                    )}
-                  </div>
-                );
-              })
+                    );
+                  })
+                )}
+              </>
+            ): (
+              <>
+                {/* 原始 Sybil 列表 */}
+                {Object.keys(safeSybil).length === 0 ? (
+                  <p className="text-gray-400 italic text-sm text-center">
+                    No suspicious entities detected.
+                  </p>
+                ) : (
+                  Object.entries(safeSybil).map(
+                    ([clusterId, clusterData]) => {
+                      const funders = clusterData.funder_to_subgroups
+                        ? Object.keys(clusterData.funder_to_subgroups)
+                        : [];
+                      const subToFunder = clusterData.subgroup_to_funder || {};
+                      const noise = Array.isArray(clusterData.noise)
+                        ? clusterData.noise
+                        : [];
+
+                      return (
+                        <div key={clusterId} className="mb-4">
+                          <p className="text-purple-300 font-bold text-lg mb-2">
+                            Cluster {clusterId}
+                          </p>
+
+                          {funders.length > 0 &&
+                            funders.map((funder, idx) => {
+                              const subgroups =
+                                clusterData.funder_to_subgroups[funder] || [];
+
+                              return (
+                                <motion.div
+                                  key={idx}
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{
+                                    duration: 0.3,
+                                    delay: idx * 0.1
+                                  }}
+                                  className="mb-3 p-3 bg-gray-800 rounded-lg shadow-md border-l-4 border-purple-500"
+                                >
+                                  <p className="text-purple-300 font-semibold">
+                                    Base Sybil entity {idx}:
+                                  </p>
+
+                                  <p
+                                    className="text-white font-medium mt-1 truncate w-full"
+                                    title={funder}
+                                  >
+                                    {funder}
+                                  </p>
+
+                                  <p className="text-gray-300 text-sm mt-1">
+                                    Strong Sybil evidence. <br />
+                                    Reason: Funding link found,{" "}
+                                    {subgroups.length} subgroups source back to{" "}
+                                    <span className="text-orange-400 font-semibold">
+                                      {shortenHex(funder)}
+                                    </span>
+                                    .
+                                  </p>
+
+                                  {subgroups.length > 0 && (
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                      <span className="text-gray-400 text-xs italic w-full">
+                                        Subgroups linked to this funder:
+                                      </span>
+                                      {subgroups.map((sub, i) => (
+                                        <span
+                                          key={i}
+                                          className="bg-purple-700/70 text-white text-xs px-2 py-1 rounded-md shadow-sm"
+                                        >
+                                          {sub}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </motion.div>
+                              );
+                            })}
+
+                          {noise.length > 0 && (
+                            <motion.div
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.3, delay: funders.length * 0.1 }}
+                              className="p-3 bg-gray-800 rounded-lg shadow-inner border-l-4 border-orange-500"
+                            >
+                              <p className="text-orange-300 font-semibold">
+                                Isolated / Noise Accounts:
+                              </p>
+                              <ul className="mt-1 flex flex-wrap gap-1">
+                                {noise.slice(0, 5).map((n, i) => (
+                                  <li
+                                    key={i}
+                                    className="bg-orange-600/70 text-white px-2 py-1 rounded-full text-xs truncate max-w-[120px]"
+                                    title={n}
+                                  >
+                                    {n}
+                                  </li>
+                                ))}
+                                {noise.length > 5 && (
+                                  <span className="text-gray-400 text-xs ml-2">
+                                    +{noise.length - 5} more
+                                  </span>
+                                )}
+                              </ul>
+                              <p className="mt-1 text-gray-400 text-xs italic">
+                                Total isolated accounts: {noise.length}
+                              </p>
+                            </motion.div>
+                          )}
+                        </div>
+                      );
+                    }
+                  )
+                )}
+              </>
             )}
           </motion.div>
         )}
       </AnimatePresence>
     </>
-
+      {/* 右侧信息面板 */}
     <div style={{
       width: 320,
       marginLeft: 20,
@@ -580,7 +679,7 @@ function shortenHex(hex, start = 6, end = 4) {
         <p style={{ fontSize: 12, fontWeight: 500, marginBottom: 6, color: "#aaa" }}>Weighted Similarity (≥85%)</p>
         <ul style={{ paddingLeft: 16, fontSize: 11, margin: 0 }}>
           {Object.entries(similarities.weighted)
-            .filter(([key, sim]) => key.includes(selected.data.id) && sim >= 0.5) // 只保留 ≥85%
+            .filter(([key, sim]) => key.includes(selected.data.id) && sim >= 0.85) // 只保留 ≥85%
             .sort((a,b) => b[1] - a[1])
             //.slice(0,5)
             .map(([key, sim]) => {

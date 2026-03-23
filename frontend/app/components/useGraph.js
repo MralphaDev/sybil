@@ -8,6 +8,8 @@ export default function useGraph() {
   const [similarities, setSimilarities] = useState({ behavior: {}, variant: {} ,weighted: {} });
   const [dbscan, setDbscan] = useState({});
   const [sybil_entities, setSybilEntities] = useState([]);
+  const [aggregated_relations, setAggregatedRelations] = useState({});
+  
   useEffect(() => {
     axios.get("http://127.0.0.1:8000/graph")
       .then(res => {
@@ -17,10 +19,11 @@ export default function useGraph() {
         setSimilarities(res.data.similarities || { behavior: {}, variant: {} });
         setDbscan(res.data.dbscan || {});
         setSybilEntities(res.data.sybil_entities || []);
+        setAggregatedRelations(res.data.aggregated_relations || {});
         console.log("Graph data loaded:", res.data);
       })
       .catch(err => console.error(err));
   }, []);
 
-  return { nodes, edges, clusters, similarities ,dbscan,sybil_entities};
+  return { nodes, edges, clusters, similarities ,dbscan,sybil_entities, aggregated_relations};
 }
