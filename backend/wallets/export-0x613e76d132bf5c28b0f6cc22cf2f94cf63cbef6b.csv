@@ -1,0 +1,4 @@
+﻿Transaction Hash,Status,Method,Blockno,DateTime (UTC),From,From_Nametag,To,To_Nametag,Amount,Value (USD),Txn Fee
+"0x2607f528170453cf1db97ff47cfc3b647f1d130d1eac0d3ac0f653212557d241","Success","Transfer","23889425","2025-11-27 10:22:23","0x613e76d132bf5c28b0f6cc22cf2f94cf63cbef6b","","0x50f41F589aFACa2EF41FDF590FE7b90cD26DEe64","","0 ETH","$0.00","0.00000469"
+"0x23eaf8fdacfdf63891bb0c11ea5c8deb4a8f6df3223d7f799b096368de51e6c5","Success","Claim","23876857","2025-11-25 16:00:23","0x613e76d132bf5c28b0f6cc22cf2f94cf63cbef6b","","0x6f4aDC0f488d159D919f0001c27D3A6B8370D513","","0.00138312 ETH","$2.86","0.00009212"
+"0xc349cc4c2399ece24f7a07c64ddc9a68c9b1c2a7fc52683dac14112bf4534045","Success","Transfer","23866935","2025-11-24 06:27:35","0x1ab4973a48dc892cd9971ece8e01dcc7688f8f23","Bitget 6","0x613e76D132bF5c28B0f6cC22cf2f94cf63CbEf6B","","0.003394 ETH","$7.01","0.00000227"

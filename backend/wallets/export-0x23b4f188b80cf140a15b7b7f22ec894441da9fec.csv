@@ -1,0 +1,3 @@
+﻿Transaction Hash,Status,Method,Blockno,DateTime (UTC),From,From_Nametag,To,To_Nametag,Amount,Value (USD),Txn Fee
+"0xe70a49cd57d80054199aa5aa42bd2d12f4a0d2a35c9b18af002054bcb96478ce","Success","Transfer","23867187","2025-11-24 07:18:47","0x23b4f188b80cf140a15b7b7f22ec894441da9fec","","0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48","Circle: USDC Token","0 ETH","$0.00","0.00001015"
+"0x38871095525187e6abd1b7a6a29dc8f1bed061bce8fa8af7732c4f70ff5c7b1c","Success","Transfer","23867182","2025-11-24 07:17:47","0x1ab4973a48dc892cd9971ece8e01dcc7688f8f23","Bitget 6","0x23B4F188B80CF140A15b7b7f22Ec894441dA9fEC","","0.0034 ETH","$7.03","0.00000203"

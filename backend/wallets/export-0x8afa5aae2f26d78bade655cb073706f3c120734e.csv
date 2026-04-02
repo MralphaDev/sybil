@@ -1,0 +1,3 @@
+﻿Transaction Hash,Status,Method,Blockno,DateTime (UTC),From,From_Nametag,To,To_Nametag,Amount,Value (USD),Txn Fee
+"0xfedfe7fbf5f312f30f049449d043153ccd4c454596e873c17a4ca1360ec2261d","Success","Transfer","23867300","2025-11-24 07:41:59","0x8afa5aae2f26d78bade655cb073706f3c120734e","","0xdAC17F958D2ee523a2206206994597C13D831ec7","Tether: USDT Stablecoin","0 ETH","$0.00","0.00006434"
+"0x9bf48d38ea494b4b839491d63da7cbe01c809077bcb019cd11637dfe48c31ee8","Success","Transfer","23867144","2025-11-24 07:09:47","0x1ab4973a48dc892cd9971ece8e01dcc7688f8f23","Bitget 6","0x8Afa5Aae2F26D78BADE655cB073706f3C120734E","","0.003411 ETH","$7.06","0.00000215"

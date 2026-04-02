@@ -2,7 +2,7 @@
 import numpy as np
 from sklearn.cluster import DBSCAN
 
-def run_dbscan_on_clusters(nodes, clusters, similarities, min_samples=2, similarity_threshold=0.9):
+def run_dbscan_on_clusters(nodes, clusters, similarities, min_samples=3, similarity_threshold=0.8):
     """
     对每个 cluster 内基于 weighted similarity 做精细 DBSCAN，只聚合 similarity >= similarity_threshold 的钱包。
     - similarities: dict "walletA-walletB" -> similarity
@@ -11,10 +11,11 @@ def run_dbscan_on_clusters(nodes, clusters, similarities, min_samples=2, similar
     返回 dict: {cluster_index: {wallet_id: dbscan_label}}
     """
     cluster_dbscan_results = {}
+    eps = 1 - similarity_threshold  # DBSCAN 的 eps 参数是距离，距离 = 1 - similarity
 
     for c_idx, cluster in enumerate(clusters):
         n = len(cluster)
-        if n < 2:
+        if n < 2: # 少于 2 个钱包无法聚类，直接标记为 -1
             cluster_dbscan_results[c_idx] = {cluster[0]: -1}
             continue
 
@@ -32,7 +33,7 @@ def run_dbscan_on_clusters(nodes, clusters, similarities, min_samples=2, similar
         distance_matrix = 1 - sim_matrix
 
         # DBSCAN eps = 1 - threshold
-        eps = 1 - similarity_threshold
+    
 
         db = DBSCAN(eps=eps, min_samples=min_samples, metric='precomputed')
         labels = db.fit_predict(distance_matrix)

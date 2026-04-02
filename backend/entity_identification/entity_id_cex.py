@@ -3,7 +3,7 @@ from sklearn.cluster import DBSCAN
 from Levenshtein import ratio as levenshtein_ratio
 from behv_analysis import behavior_sim
 
-def analyze_subgroup_clusters_global(dbscan_clusters, nodes, variant_weight=0.5, eps=0.3, min_samples=2):
+def analyze_subgroup_clusters_global(dbscan_clusters, nodes, variant_weight=0.5, eps=0.2, min_samples=2):
     """
     对所有 cluster 的 subgroups 做全局 DBSCAN
     1. 每个 subgroup 聚合行为向量
@@ -32,7 +32,7 @@ def analyze_subgroup_clusters_global(dbscan_clusters, nodes, variant_weight=0.5,
 
     n = len(all_subgroups)
     if n == 0:
-        print("[Global] No valid subgroups for analysis.")
+       # print("[Global] No valid subgroups for analysis.")
         return {}
 
     # ---------------------------
@@ -86,9 +86,9 @@ def analyze_subgroup_clusters_global(dbscan_clusters, nodes, variant_weight=0.5,
     for idx, label in enumerate(labels):
         label_to_subgroups.setdefault(label, []).append(all_subgroups[idx]['id'])
 
-    print("\n[Global] DBSCAN Subgroup Clusters:")
-    for label, subs in label_to_subgroups.items():
-        print(f"  Cluster {label}: {subs}")
+    #print("\n[Global] DBSCAN Subgroup Clusters:")
+    '''for label, subs in label_to_subgroups.items():
+        print(f"  Cluster {label}: {subs}")'''
 
     # ---------------------------
     # 6. 返回结果

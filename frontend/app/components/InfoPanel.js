@@ -46,21 +46,27 @@ const safeAggregated = Array.isArray(aggregated_relations)
   ? aggregated_relations
   : [];
 
+    const PANEL_WIDTH = 315; // w-80 对应的固定宽度像素
+  const BUTTON_Y = window.innerHeight / 2; // 居中
   return (
     <div>
     <>
-      {/* 左侧书签按钮 */}
-      <div className="fixed top-1/2 left-0 z-50">
-        <button
-          onClick={() => setOpen(!open)}
-          className={`px-3 py-4 rounded-r-xl shadow-lg text-white font-bold 
-                      bg-gradient-to-b from-purple-600 to-orange-500 
-                      hover:from-purple-700 hover:to-orange-600 
-                      transition-transform hover:scale-110`}
-        >
-          {open ? "⯈" : "⯇"}
-        </button>
-      </div>
+{/* 左侧书签按钮 */}
+      <motion.button
+        onClick={() => setOpen(!open)}
+        className="px-3 py-4 rounded-r-xl shadow-lg text-white font-bold 
+                   bg-gradient-to-b from-purple-600 to-orange-500 
+                   hover:from-purple-700 hover:to-orange-600"
+        style={{
+          position: "fixed",
+          top: BUTTON_Y,
+          left: open ? PANEL_WIDTH : 0, // 打开靠右边，关闭靠左边
+          zIndex: 100,
+          transition: "left 0.3s ease", // 平滑过渡位置
+        }}
+      >
+        {open ? "⯇" : "⯈"} {/* 文字不动画 */}
+      </motion.button>
        
       {/* Sybil Info Panel */}
       <AnimatePresence>
@@ -177,7 +183,7 @@ const safeAggregated = Array.isArray(aggregated_relations)
                       return (
                         <div key={clusterId} className="mb-4">
                           <p className="text-purple-300 font-bold text-lg mb-2">
-                            Cluster {clusterId}
+                            Cluster {parseInt(clusterId) + 1} 
                           </p>
 
                           {funders.length > 0 &&
@@ -197,7 +203,7 @@ const safeAggregated = Array.isArray(aggregated_relations)
                                   className="mb-3 p-3 bg-gray-800 rounded-lg shadow-md border-l-4 border-purple-500"
                                 >
                                   <p className="text-purple-300 font-semibold">
-                                    Base Sybil entity {idx}:
+                                    Intra-Cluster Sybil entity {idx+1}:
                                   </p>
 
                                   <p
@@ -232,6 +238,26 @@ const safeAggregated = Array.isArray(aggregated_relations)
                                       ))}
                                     </div>
                                   )}
+
+                                  <div className="mt-1 flex flex-wrap gap-1">
+                                    <span className="text-gray-400 text-xs italic w-full">
+                                      Recovered Noise:
+                                    </span>
+
+                                    {sybil_entities[clusterId]?.recovered_noise?.length > 0 ? (
+                                      sybil_entities[clusterId].recovered_noise.map((addr, idx) => (
+                                        <span
+                                          key={idx}
+                                          className="text-xs text-orange-300 font-semibold px-2 py-1 rounded-md bg-orange-600/70 shadow-sm"
+                                        >
+                                          {addr.slice(0, 6)}...{addr.slice(-4)}
+                                        </span>
+                                      ))
+                                    ) : (
+                                      <span className="text-gray-500 text-xs italic">None</span>
+                                    )}
+                                  </div>
+                                  
                                 </motion.div>
                               );
                             })}

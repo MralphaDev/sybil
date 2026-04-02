@@ -8,6 +8,7 @@ import useGraph from "./useGraph";
 export default function GraphCanvas({ nodes, edges, onSelect ,selected, highlightNodes, setHighlightNodes,clusters }) {
   const { similarities, dbscan, sybil_entities,aggregated_relations } = useGraph();
   const [mounted, setMounted] = useState(false);
+  const [size, setSize] = useState({ width: 0, height: 0 });
   const svgRef = useRef(null);
   const baseColors = ["#ef7112", "#da00ab", "#00d58c"];
   const clusterColorMap = new Map();
@@ -27,9 +28,16 @@ export default function GraphCanvas({ nodes, edges, onSelect ,selected, highligh
   });
 
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+
+useEffect(() => {
+  setMounted(true);
+}, []);
+
+useEffect(() => {
+  if (mounted) {
+    setSize({ width: window.innerWidth, height: window.innerHeight });
+  }
+}, [mounted]);
 
   useEffect(() => {
 
@@ -304,7 +312,7 @@ node.append("circle")
 
     // node label
     node.append("text")
-      //.text(d => d.id.slice(0, 6))
+      .text(d => d.id.slice(0, 6))
       .attr("fill", "#fff")
       .attr("font-size", 10)
       .attr("text-anchor", "middle")
@@ -433,12 +441,16 @@ sim.on("tick", () => {
 
         if (!d.source?.x || !d.target?.x) return;
 
-        d.t += 0.002;
+        d.t += 0.001;
 
         if (d.t > 1) d.t = 0;
 
-        const x = d.source.x + (d.target.x - d.source.x) * d.t;
-        const y = d.source.y + (d.target.y - d.source.y) * d.t;
+        // start a bit away from source
+        const startOffset = 0.15; // 10% away from source
+        const t = startOffset + (1 - startOffset) * d.t;
+
+        const x = d.source.x + (d.target.x - d.source.x) * t;
+        const y = d.source.y + (d.target.y - d.source.y) * t;
 
         d3.select(this)
           .attr("cx", x)
@@ -484,238 +496,16 @@ sim.on("tick", () => {
 }, [highlightNodes]);
 
 return (
-  <div style={{ width: "100vw", height: "100v", position: "relative" }}>
+  <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
 
-    {!mounted || nodes.length === 0 && (
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          zIndex: 10,
-          overflow: "hidden",
-          background: "radial-gradient(circle at center, #02030f 0%, #000 80%)"
-        }}
-      >
-        {/* 宇宙 glow */}
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            width: 500,
-            height: 500,
-            transform: "translate(-50%, -50%)",
-            background: "radial-gradient(circle, rgba(120,0,255,0.25), transparent 70%)",
-            filter: "blur(120px)"
-          }}
-        />
-
-        {/* 🌠 流星向右，尾巴在左，大头在右，从屏幕左侧刷新 */}
-        {/*[...Array(15)].map((_, i) => (
-  <div
-    key={i}
-    style={{
-      position: "absolute",
-      top: `${Math.random() * 90}%`,
-      left: `${Math.random() * 20}%`,
-      width: 120 + Math.random() * 80,
-      height: 2,
-      background: "linear-gradient(to left, white, transparent)",
-      opacity: 0.8,
-      borderRadius: 2,
-      animationName: "meteorRightLong",
-      animationDuration: "2.5s",
-      animationTimingFunction: "linear",
-      animationIterationCount: "infinite",
-      animationDelay: `${i * 0.15}s`, // 每颗流星错开启动
-      boxShadow: "0 0 8px rgba(255,255,255,0.8)"
-    }}
-  />
-))*/}
-
-        {/* 星点 */}
-        {[...Array(40)].map((_, i) => (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              width: Math.random() * 2 + 1,
-              height: Math.random() * 2 + 1,
-              background: "white",
-              borderRadius: "50%",
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              opacity: 0.3,
-              animation: `twinkle ${2 + Math.random() * 3}s infinite`
-            }}
-          />
-        ))}
-
-        {/* 🔺 三角形 + 核心 */}
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            width: 200,
-            height: 200,
-            transform: "translate(-50%, -50%)"
-          }}
-        >
-          {/* 外环 */}
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              width: 140,
-              height: 140,
-              transform: "translate(-50%, -50%)",
-              borderRadius: "50%",
-              border: "2px dashed rgba(255,255,255,0.2)",
-              animation: "spinDash 6s linear infinite, pulseRing 3s ease-in-out infinite",
-              boxShadow: "0 0 25px rgba(168,85,247,0.4)"
-            }}
-          />
-
-          {/* 内核光圈 */}
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              width: 80,
-              height: 80,
-              transform: "translate(-50%, -50%)",
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%)",
-              animation: "pulseCore 2.5s ease-in-out infinite"
-            }}
-          />
-
-          {/* 三角形 */}
-          {[0, 1, 2].map((i) => {
-            const colors = ["#a855f7", "#ec4899", "#f97316"];
-            return (
-              <div
-                key={i}
-                style={{
-                  position: "absolute",
-                  width: 0,
-                  height: 0,
-                  borderLeft: "25px solid transparent",
-                  borderRight: "25px solid transparent",
-                  borderBottom: `45px solid ${colors[i]}`,
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  filter: `drop-shadow(0 0 18px ${colors[i]})`,
-                  animation: `
-                    rotateTri 6s linear infinite,
-                    breatheTri 3s ease-in-out infinite
-                  `,
-                  animationDelay: `${i * 0.4}s`
-                }}
-              />
-            );
-          })}
-
-          {/* LOADING */}
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              fontSize: 12,
-              letterSpacing: "4px",
-              fontWeight: 600,
-              color: "rgba(255,255,255,0.85)",
-              textShadow: "0 0 12px rgba(168,85,247,0.9)",
-              animation: "loadingPulse 2s ease-in-out infinite"
-            }}
-          >
-            LOADING
-          </div>
-
-          {/* 扫描线 */}
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              width: 120,
-              height: 20,
-              transform: "translate(-50%, -50%)",
-              overflow: "hidden"
-            }}
-          >
-            <div
-              style={{
-                width: "40%",
-                height: "100%",
-                background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent)",
-                animation: "scanMove 2s linear infinite"
-              }}
-            />
-          </div>
-
-        </div>
-
-        {/* KEYFRAMES */}
-        <style>
-          {`
-          @keyframes rotateTri {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
-          }
-          @keyframes breatheTri {
-            0%,100% { margin-top: -10px; opacity: 0.8; }
-            50% { margin-top: 20px; opacity: 1; }
-          }
-          @keyframes spinDash {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
-          }
-          @keyframes pulseRing {
-            0%,100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-            50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
-          }
-          @keyframes pulseCore {
-            0%,100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.6; }
-            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-          }
-          @keyframes twinkle {
-            0%,100% { opacity: 0.1; }
-            50% { opacity: 0.6; }
-          }
-          /* 流星滑行长距离，大头朝右，尾巴在左 */
-          @keyframes meteorRightLong {
-            0% { transform: translateX(0); opacity: 1; }
-            75% { opacity: 1; }
-            100% { transform: translateX(800px); opacity: 0; }
-          }
-          @keyframes loadingPulse {
-            0%,100% { opacity: 0.6; letter-spacing: 4px; }
-            50% { opacity: 1; letter-spacing: 6px; }
-          }
-          @keyframes scanMove {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(250%); }
-          }
-        `}
-        </style>
-
-      </div>
-    )}
 
     {/* 原始 SVG */}
     <svg
       ref={svgRef}
       width="100vw"
       height="100vh"
-        viewBox={`0 0 ${window.innerWidth} ${window.innerHeight}`}
-  preserveAspectRatio="xMidYMid meet"
+      viewBox={`0 0 ${size.width} ${size.height}`}
+      preserveAspectRatio="xMidYMid meet"
       style={{ display: "block" }}
     />
 
@@ -727,7 +517,7 @@ return (
           right: 20,
           width: 350,
           height: "90vh",
-          zIndex: 999,
+          zIndex: 1,
         }}
       >
         <InfoPanelRight
